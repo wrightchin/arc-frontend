@@ -51,7 +51,7 @@ function Photo({
   }, []);
 
   useEffect(() => {
-    drawDetections();
+    drawDetections(); 
   }, [prediction]);
 
   const videoRef = useCallback(
@@ -130,9 +130,79 @@ function Photo({
     if (!prediction || !prediction.detections || !imageCanvas.getContext) {
       return;
     }
-
-    prediction.detections.filter((d) => d.score > minScore).forEach((d) => drawDetection(d));
+    // prediction.detections.filter((d) => d.score > minScore).forEach((d) => drawDetection(d));
+    const bboxes = prediction.detections.filter((d) => d.score > minScore).map((d) => drawDetectionControl(d));
+    bboxes.forEach((b)=> drawBbox(b));
   }
+
+  function drawBbox({x, y, width, height, color, label, score}) {
+    const ctx = imageCanvas.getContext("2d");
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "#76b900";
+    ctx.strokeRect(x, y, width, height);
+    var score = score.toFixed(3);
+
+    var discount = discountSwitch(label);
+
+    let message = label + ", " + score + ", " + discount
+    const couponText = String(message);
+    const baseX = x + 0 * width;
+    const baseY = y + 0 * height;
+    // Draw coupon
+    ctx.save();
+    ctx.translate(baseX, baseY)
+    ctx.font = couponText;
+    ctx.textBaseline = 'top'
+    ctx.fillStyle = '#76b900';
+    var width = ctx.measureText(couponText).width;
+    ctx.fillRect(0, 0, width, 12);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(couponText, 0, 0);
+    ctx.restore();
+  };
+
+  function discountSwitch(label) {
+    switch(label) {
+      case "Human face":
+        return "0% Discount"
+      case "Mobile phone":
+        return "10% Discount"
+      case "Glasses":
+        return "8% Discount"
+      default:
+        return "5% Discount"
+      }
+  };
+
+  function drawDetectionControl({ box, label, score, cValue }) {
+    const drawScore = true;
+    const textBgHeight = 14;
+    const padding = 2;
+    const letterWidth = 7.25;
+    const scoreWidth = drawScore ? 4 * letterWidth : 0;
+    const text = drawScore ? `${label} ${Math.floor(score * 100)}%` : label;
+
+    const width = Math.floor((box.xMax - box.xMin) * imageCanvas.width);
+    const height = Math.floor((box.yMax - box.yMin) * imageCanvas.height);
+    const x = Math.floor(box.xMin * imageCanvas.width);
+    const y = Math.floor(box.yMin * imageCanvas.height);
+    const labelSetting = labelSettings[label];
+    const labelWidth = label.length * letterWidth + scoreWidth + padding * 2;
+    let bbox = { 
+      "x": x, 
+      "y": y,
+      "width": width,
+      "height": height,
+      "bgColor": labelSetting.bgColor,
+      "label": label,
+      "score": score
+     };
+    
+    return bbox
+  } 
+
+  
 
   function drawDetection({ box, label, score, cValue }) {
     const drawScore = true;
@@ -153,15 +223,16 @@ function Photo({
     drawBox(x, y, width, height, labelSetting.bgColor);
     //drawBoxTextBG(x, y + height - textBgHeight, labelWidth, textBgHeight, labelSetting.bgColor);
     //drawBoxText(text, x + padding, y + height - padding);
-    drawCoupon(cValue, x, y, width, height);
-    clearZone(x + 5, y + height - textBgHeight - 4, labelWidth, textBgHeight);
-    clearZone(x, y, width, height);
+    // drawCoupon(cValue, x, y, width, height);
+    drawCoupon(label, score, x, y, width, height);
+    // clearZone(x + 5, y + height - textBgHeight - 4, labelWidth, textBgHeight);
+    // clearZone(x, y, width, height);
   }
 
   function drawBox(x, y, width, height, color) {
     const ctx = imageCanvas.getContext("2d");
     ctx.lineWidth = 2;
-    ctx.setLineDash([5, 15]);
+    ctx.setLineDash([]);
     ctx.strokeStyle = color;
     ctx.strokeRect(x, y, width, height);
   }
@@ -181,8 +252,10 @@ function Photo({
     ctx.fillText(text, x, y);
   }
 
-  function drawCoupon(message, x, y, width, height) {
+  function drawCoupon(label, score, x, y, width, height) {
     const ctx = imageCanvas.getContext("2d");
+    let message = label + ", " +score
+    console.log("message", message)
     const couponText = String(message);
     const angle = 0.25;
 

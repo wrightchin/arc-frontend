@@ -12,7 +12,7 @@ const initialState = {
   prediction: null,
   predictionError: null,
   labelSettings: {},
-  minScore: 0.0,
+  minScore: 0.6,
 };
 
 export const photoReducer = (state = initialState, action) => {
