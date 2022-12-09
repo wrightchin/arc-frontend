@@ -4,7 +4,7 @@ const IP = env.get("IP").default("0.0.0.0").asString();
 const LOG_LEVEL = env.get("LOG_LEVEL").default("info").asString();
 const OBJECT_DETECTION_URL = env
   .get("OBJECT_DETECTION_URL")
-  .default("https://object-detection-rest-git-wright-demo.apps.cluster-czbz2.sandbox2.opentlc.com/predictions")
+  .default("http://object-detection-rest-git-wright-aiml-4.apps.ocp.ws.local/predictions")
   .asString();
 const S3_ENDPOINT = env.get("S3_ENDPOINT").asString();
 const S3_BUCKET = env.get("S3_BUCKET").asString();
